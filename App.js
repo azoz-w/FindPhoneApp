@@ -1,32 +1,129 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   Button,
   View,
   SafeAreaView,
   Text,
-  Alert,
+  PermissionsAndroid,
 } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 
-const Separator = () => <View style={styles.separator} />;
+// Function to get permission for location
+const requestLocationPermission = async () => {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: 'Geolocation Permission',
+        message: 'Can we access your location?',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      },
+    );
+    console.log('granted', granted);
+    if (granted === 'granted') {
+      console.log('You can use Geolocation');
+      return true;
+    } else {
+      console.log('You cannot use Geolocation');
+      return false;
+    }
+  } catch (err) {
+    return false;
+  }
+};
 
-const App = () => (
-  <SafeAreaView style={styles.container}>
-    <View>
-      <Text style={styles.title}>
-        The title and onPress handler are required. It is recommended to set
-        accessibilityLabel to help make your app usable by everyone.
-      </Text>
-      <Button
-        title="Press me"
-        onPress={() => Alert.alert('Simple Button pressed')}
-      />
-    </View>
-    <Separator />
-  </SafeAreaView>
-);
+//we need to create the websocket connection from here
+function startTracking() {
+  var ws = new WebSocket('ws://localhost:8881/websocket');
+
+  ws.onopen = () => {
+    // connection opened
+    ws.send('something'); // send a message
+  };
+
+  ws.onmessage = e => {
+    // a message was received
+    console.log(e.data);
+  };
+
+  ws.onerror = e => {
+    // an error occurred
+    console.log(e.message);
+  };
+
+  ws.onclose = e => {
+    // connection closed
+    console.log(e.code, e.reason);
+  };
+}
+
+const App = () => {
+  // state to hold location
+  const [location, setLocation] = useState(false);
+  // function to check permissions and get Location
+  const getLocation = () => {
+    const result = requestLocationPermission();
+    result.then(res => {
+      console.log('res is:', res);
+      if (res) {
+        Geolocation.getCurrentPosition(
+          position => {
+            console.log(position);
+            setLocation(position);
+          },
+          error => {
+            // See error code charts below.
+            console.log(error.code, error.message);
+            setLocation(false);
+          },
+          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        );
+      }
+    });
+    console.log(location);
+  };
+
+  //this it to change the state of the button for tracking location,,,
+  // should be moved in a seperate component
+  const [buttonTitle, setButtonTitle] = useState(false);
+  const titleHandler = () => {
+    setButtonTitle(!buttonTitle);
+    startTracking();
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View>
+        <View style={styles.button}>
+          <Button title="Get Location" onPress={getLocation} />
+        </View>
+        <Text style={styles.title}>
+          Latitude: {location ? location.coords.latitude : null}
+        </Text>
+        <Text style={styles.title}>
+          Longitude: {location ? location.coords.longitude : null}
+        </Text>
+        <View style={styles.separator} />
+        <Button
+          title={buttonTitle ? 'Stop Tracking' : 'Start Tracking Location'}
+          onPress={() => titleHandler()}
+        />
+        <Text style={styles.title}>{}</Text>
+      </View>
+      <View style={styles.separator} />
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
+  button: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
