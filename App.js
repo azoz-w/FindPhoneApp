@@ -8,7 +8,7 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-
+import CoordsButton from './components/Button';
 // Function to get permission for location
 const requestLocationPermission = async () => {
   try {
@@ -37,7 +37,7 @@ const requestLocationPermission = async () => {
 
 //we need to create the websocket connection from here
 function startTracking() {
-  var ws = new WebSocket('ws://localhost:8881/websocket');
+  var ws = new WebSocket('ws://127.0.0.1:8881/websocket');
 
   ws.onopen = () => {
     // connection opened
@@ -59,7 +59,7 @@ function startTracking() {
     console.log(e.code, e.reason);
   };
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const App = () => {
   // state to hold location
   const [location, setLocation] = useState(false);
@@ -83,7 +83,6 @@ const App = () => {
         );
       }
     });
-    console.log(location);
   };
 
   //this it to change the state of the button for tracking location,,,
@@ -97,15 +96,17 @@ const App = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <View style={styles.button}>
-          <Button title="Get Location" onPress={getLocation} />
+        <View>
+          <CoordsButton location={location} getLocation={getLocation} />
+          {/* <Button title="Get Location" onPress={getLocation} />
+
+          <Text style={styles.title}>
+            Latitude: {location ? location.coords.latitude : null}
+          </Text>
+          <Text style={styles.title}>
+            Longitude: {location ? location.coords.longitude : null}
+          </Text> */}
         </View>
-        <Text style={styles.title}>
-          Latitude: {location ? location.coords.latitude : null}
-        </Text>
-        <Text style={styles.title}>
-          Longitude: {location ? location.coords.longitude : null}
-        </Text>
         <View style={styles.separator} />
         <Button
           title={buttonTitle ? 'Stop Tracking' : 'Start Tracking Location'}
@@ -113,7 +114,6 @@ const App = () => {
         />
         <Text style={styles.title}>{}</Text>
       </View>
-      <View style={styles.separator} />
     </SafeAreaView>
   );
 };
