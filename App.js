@@ -10,6 +10,8 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
 // Function to get permission for location
+
+
 const requestLocationPermission = async () => {
   try {
     const granted = await PermissionsAndroid.request(
@@ -37,12 +39,12 @@ const requestLocationPermission = async () => {
 
 //we need to create the websocket connection from here
 function startTracking() {
-  var ws = new WebSocket('ws://127.0.0.1:8881/websocket');
+  var ws = new WebSocket("ws://10.0.2.2:8881/websocket");
 
-  ws.onopen = () => {
-    // connection opened
-    ws.send('something'); // send a message
-  };
+  ws.onopen = function () {
+    console.log("Client CONNECTED");
+    ws.send("Client CONNECTED");
+};
 
   ws.onmessage = e => {
     // a message was received
