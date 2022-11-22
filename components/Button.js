@@ -6,7 +6,7 @@ const CoordsButton = props => {
   return (
     <SafeAreaView>
       <View>
-        <Button title="Get Location" onPress={props.getLocation} />
+        {/* <Button title="Get Location" onPress={props.getLocation} /> */}
 
         <Text style={styles.title}>
           Latitude: {props.location ? props.location.coords.latitude : null}
