@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
+
 // Function to get permission for location
 
 
@@ -37,31 +38,6 @@ const requestLocationPermission = async () => {
   }
 };
 
-//we need to create the websocket connection from here
-function startTracking() {
-  var ws = new WebSocket("ws://10.0.2.2:8881/websocket");
-
-  ws.onopen = function () {
-    console.log("Client CONNECTED");
-    ws.send("Client CONNECTED");
-};
-
-  ws.onmessage = e => {
-    // a message was received
-    console.log(e.data);
-  };
-
-  ws.onerror = e => {
-    // an error occurred
-    console.log(e.message);
-  };
-
-  ws.onclose = e => {
-    // connection closed
-    console.log(e.code, e.reason);
-  };
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 const App = () => {
   // state to hold location
   const [location, setLocation] = useState(false);
@@ -73,8 +49,13 @@ const App = () => {
       if (res) {
         Geolocation.getCurrentPosition(
           position => {
-            console.log(position);
+            console.log(
+              position.coords.latitude + '||' + position.coords.longitude,
+            );
             setLocation(position);
+            ws.send(
+              position.coords.latitude + '||' + position.coords.longitude,
+            );
           },
           error => {
             // See error code charts below.
@@ -86,13 +67,31 @@ const App = () => {
       }
     });
   };
+  var ws = new WebSocket('ws://10.0.2.2:8881/websocket');
 
-  //this it to change the state of the button for tracking location,,,
-  // should be moved in a seperate component
-  const [buttonTitle, setButtonTitle] = useState(false);
-  const titleHandler = () => {
+  ws.onopen = () => {
+    ws.send('something');
+  };
+  ws.onmessage = e => {
+    console.log(e.data);
+  };
+  ws.onerror = e => {
+    console.log(e.message);
+  };
+  ws.onclose = e => {
+    console.log(e.code, e.reason);
+  };
+
+  //this it to change the state of the button for tracking location,
+  const [buttonTitle, setButtonTitle] = useState(true);
+  const startTracking = () => {
     setButtonTitle(!buttonTitle);
-    startTracking();
+    getLocation();
+    // ws.send(JSON.stringify(location.coords));
+  };
+  const stopTracking = () => {
+    setButtonTitle(!buttonTitle);
+    ws.close();
   };
 
   return (
@@ -100,20 +99,23 @@ const App = () => {
       <View>
         <View>
           <CoordsButton location={location} getLocation={getLocation} />
-          {/* <Button title="Get Location" onPress={getLocation} />
-
-          <Text style={styles.title}>
-            Latitude: {location ? location.coords.latitude : null}
-          </Text>
-          <Text style={styles.title}>
-            Longitude: {location ? location.coords.longitude : null}
-          </Text> */}
         </View>
         <View style={styles.separator} />
-        <Button
-          title={buttonTitle ? 'Stop Tracking' : 'Start Tracking Location'}
-          onPress={() => titleHandler()}
-        />
+        {buttonTitle ? (
+          <Button
+            title="Start Tracking Location"
+            onPress={startTracking}
+            style={styles.startButton}
+            color="#238823"
+          />
+        ) : (
+          <Button
+            title="Stop Tracking"
+            onPress={stopTracking}
+            style={styles.stopButton}
+            color="#D2222D"
+          />
+        )}
         <Text style={styles.title}>{}</Text>
       </View>
     </SafeAreaView>
@@ -121,15 +123,21 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  button: {
+  startButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
+  },
+  stopButton: {
     marginTop: 10,
     padding: 10,
     borderRadius: 10,
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     marginHorizontal: 16,
+    marginBottom: 35,
   },
   title: {
     textAlign: 'center',
@@ -145,5 +153,4 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
-
 export default App;
