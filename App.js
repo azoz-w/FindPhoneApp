@@ -11,6 +11,8 @@ import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
 
 // Function to get permission for location
+
+
 const requestLocationPermission = async () => {
   try {
     const granted = await PermissionsAndroid.request(
