@@ -10,10 +10,11 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
 
+
 // Function to get permission for location
 const requestLocationPermission = async () => {
   try {
-    const granted = await PermissionsAndroid.request(
+    const locationPermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       {
         title: 'Geolocation Permission',
@@ -23,9 +24,9 @@ const requestLocationPermission = async () => {
         buttonPositive: 'OK',
       },
     );
-    console.log('granted', granted);
-    if (granted === 'granted') {
-      console.log('You can use Geolocation');
+    console.log('Location Permission:', locationPermission);
+    if (locationPermission === 'granted') {
+      console.log('You can use Geolocation');     
       return true;
     } else {
       console.log('You cannot use Geolocation');
@@ -37,19 +38,24 @@ const requestLocationPermission = async () => {
 };
 
 const App = () => {
-  // state to hold location
+  //State to hold location
   const [location, setLocation] = useState(false);
-  // function to check permissions and get Location
+  //This it to change the state of the button for tracking location,
+  const [activateButton, setActivateButton] = useState(false);
+
+
   setTimeout(() => {
     if (requestLocationPermission() && activateButton) {
       getLocation();
     }
   }, 1000);
+
   const getLocation = () => {
-    const result = requestLocationPermission();
-    result.then(res => {
-      console.log('res is:', res);
-      if (res) {
+    const isGranted = requestLocationPermission();
+
+    isGranted.then(isGranted => {
+      console.log('isGranted: ', isGranted);
+      if (isGranted) {
         Geolocation.getCurrentPosition(
           position => {
             console.log(
@@ -70,11 +76,11 @@ const App = () => {
       }
     });
   };
-  var ws = new WebSocket('ws://192.168.139.81:8881/websocket');
+   var ws = new WebSocket('ws://192.168.139.81:8881/websocket');
 
   ws.onopen = () => {
     //called once the connection is established
-    console.log('connection opened');
+    console.log('Connection Opened');
   };
   ws.onmessage = e => {
     //called once the server sends a message
@@ -86,19 +92,18 @@ const App = () => {
   };
   ws.onclose = e => {
     //called when connection is closed
-    console.log(e.code, e.reason);
+    console.log('Client Connection Closed');
+    // console.log(e.code, e.reason);
   };
 
-  //this it to change the state of the button for tracking location,
-  const [activateButton, setActivateButton] = useState(false);
   const startTracking = () => {
     setActivateButton(!activateButton);
     getLocation();
-
     // ws.send(JSON.stringify(location.coords));
   };
   const stopTracking = () => {
     setActivateButton(!activateButton);
+    //Close connection 
     ws.close();
   };
 
@@ -124,7 +129,6 @@ const App = () => {
             color="#D2222D"
           />
         )}
-        <Text style={styles.title}>{}</Text>
       </View>
     </SafeAreaView>
   );
