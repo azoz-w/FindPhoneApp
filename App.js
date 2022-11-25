@@ -11,8 +11,6 @@ import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
 
 // Function to get permission for location
-
-
 const requestLocationPermission = async () => {
   try {
     const granted = await PermissionsAndroid.request(
@@ -42,6 +40,11 @@ const App = () => {
   // state to hold location
   const [location, setLocation] = useState(false);
   // function to check permissions and get Location
+  setTimeout(() => {
+    if (requestLocationPermission() && activateButton) {
+      getLocation();
+    }
+  }, 1000);
   const getLocation = () => {
     const result = requestLocationPermission();
     result.then(res => {
@@ -67,30 +70,35 @@ const App = () => {
       }
     });
   };
-  var ws = new WebSocket('ws://10.0.2.2:8881/websocket');
+  var ws = new WebSocket('ws://192.168.139.81:8881/websocket');
 
   ws.onopen = () => {
-    ws.send('something');
+    //called once the connection is established
+    console.log('connection opened');
   };
   ws.onmessage = e => {
+    //called once the server sends a message
     console.log(e.data);
   };
   ws.onerror = e => {
+    //called when an error is sent
     console.log(e.message);
   };
   ws.onclose = e => {
+    //called when connection is closed
     console.log(e.code, e.reason);
   };
 
   //this it to change the state of the button for tracking location,
-  const [buttonTitle, setButtonTitle] = useState(true);
+  const [activateButton, setActivateButton] = useState(false);
   const startTracking = () => {
-    setButtonTitle(!buttonTitle);
+    setActivateButton(!activateButton);
     getLocation();
+
     // ws.send(JSON.stringify(location.coords));
   };
   const stopTracking = () => {
-    setButtonTitle(!buttonTitle);
+    setActivateButton(!activateButton);
     ws.close();
   };
 
@@ -101,7 +109,7 @@ const App = () => {
           <CoordsButton location={location} getLocation={getLocation} />
         </View>
         <View style={styles.separator} />
-        {buttonTitle ? (
+        {!activateButton ? (
           <Button
             title="Start Tracking Location"
             onPress={startTracking}
