@@ -10,7 +10,6 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import CoordsButton from './components/Button';
 
-
 // Function to get permission for location
 const requestLocationPermission = async () => {
   try {
@@ -76,11 +75,11 @@ const App = () => {
       }
     });
   };
-   var ws = new WebSocket('ws://192.168.139.81:8881/websocket');
+   var ws = new WebSocket(`ws://${process.env.HOST}:${process.env.PORT}/websocket`);
 
   ws.onopen = () => {
     //called once the connection is established
-    console.log('Connection Opened');
+    console.log('Connection Opened ');
   };
   ws.onmessage = e => {
     //called once the server sends a message
